@@ -1,8 +1,8 @@
-# MagickBet — Binary Prediction Market on MagicBlock Private Ephemeral Rollups
+﻿# MagickBet вЂ” Binary Prediction Market on MagicBlock Private Ephemeral Rollups
 
 **MagickBet** utilizes a Dual-Validator Ephemeral Rollup architecture. Global state (Market pool, Timer, Price) runs on standard EU nodes, while user positions (`PlayerBet`) are securely delegated to a TEE (Intel TDX) Validator, ensuring front-running protection before the reveal phase.
 
-## 🔒 Private Ephemeral Rollups (PER) Architecture
+## рџ”’ Private Ephemeral Rollups (PER) Architecture
 - **Market PDA** -> Delegated to Standard ER (Public Aggregated Data)
 - **PlayerBet PDA** -> Delegated to TEE ER (Private User Bets)
 
@@ -19,8 +19,8 @@ MagickBet is a decentralized binary prediction market built on Solana devnet usi
 ## Architecture
 
 ### Two-Layer System
-- **Solana L1**: Market creation, vault (escrow), winnings claims — permanent state
-- **MagicBlock ER**: Bet placement with 50ms slot time — ultra-fast transactions
+- **Solana L1**: Market creation, vault (escrow), and base settlement state.
+- **MagicBlock ER/PER**: delegated runtime paths for public market state (ER) and private user positions (TEE PER).
 
 ### Key Components
 | Component | Description |
@@ -28,7 +28,9 @@ MagickBet is a decentralized binary prediction market built on Solana devnet usi
 | `initialize_factory` | One-time setup of the MarketFactory PDA |
 | `create_market` | Create a new prediction market on L1 |
 | `delegate_market` | Delegate Market PDA to ER for fast bets |
-| `place_bet` | Place YES/NO bet (runs on ER, skipPreflight=true) |
+| `create_private_bet` | Create private `PlayerBet` position (main demo bet entrypoint) |
+| `delegate_private_bet` | Delegate `PlayerBet` PDA to TEE validator via `DELeGG` CPI |
+| `place_bet` | Legacy/experimental ER bet path (not primary demo flow) |
 | `resolve_market` | Read Pyth Lazer price, settle market, undelegate from ER |
 | `claim_winnings` | Claim proportional payout from vault (runs on L1) |
 
@@ -96,7 +98,7 @@ npm run smoke:devnet
 - `FALLBACK`: Binance WebSocket or REST (`binance_ws` / `binance_rest`)
 - `SIM`: local simulation fallback (`simulated`)
 
-This keeps the demo resilient even when one upstream feed is unstable.
+This keeps the demo resilient even when one upstream feed is unstable. In practice, the badge can show `Binance` when Pyth WS is unavailable.
 
 ## UI Scope
 - Primary hackathon UX is the single-screen flow in `app/src/App.tsx`.
@@ -106,32 +108,33 @@ This keeps the demo resilient even when one upstream feed is unstable.
 - The main demo proves private bet creation + delegation flow onchain (`CreatePrivateBet` + `DelegatePrivateBet` + `DELeGG` CPI).
 - "Private Bet (TEE Secured)" positions are intentionally hidden in UI until reveal.
 - Current private-bet claim settlement is demo-limited: payout claim for private positions is not exposed as a production onchain flow in this submission.
+- The top price badge is source-aware (Pyth preferred, Binance fallback, Simulated last resort).
 
 ## Project Structure
 ```
 oracle_bet/
-├── programs/oracle_bet/src/
-│   ├── lib.rs                    # #[ephemeral] + #[program] + 6 instructions
-│   ├── errors.rs                 # 12 error codes
-│   ├── state/
-│   │   ├── market.rs             # Market struct (Vec<BetEntry> max 20)
-│   │   ├── market_factory.rs     # MarketFactory PDA
-│   │   └── user_position.rs      # UserPosition (unused in v1)
-│   └── instructions/
-│       ├── initialize_factory.rs
-│       ├── create_market.rs
-│       ├── delegate_market.rs    # CPI to Delegation Program
-│       ├── place_bet.rs          # Runs on ER
-│       ├── resolve_market.rs     # Pyth Lazer + commit_and_undelegate
-│       └── claim_winnings.rs     # PMM payout + .retain() double-claim protection
-├── app/                          # React frontend
-│   └── src/
-│       ├── hooks/                # useMarkets, usePlaceBet, useResolveMarket, ...
-│       ├── components/           # MarketCard, AdminPanel, LivePriceWidget, ...
-│       └── constants.ts          # PROGRAM_ID, RPC endpoints
-├── tests/
-│   └── devnet-integration.ts    # Full lifecycle test
-└── Anchor.toml
+в”њв”Ђв”Ђ programs/oracle_bet/src/
+в”‚   в”њв”Ђв”Ђ lib.rs                    # #[ephemeral] + #[program] + 6 instructions
+в”‚   в”њв”Ђв”Ђ errors.rs                 # 12 error codes
+в”‚   в”њв”Ђв”Ђ state/
+в”‚   в”‚   в”њв”Ђв”Ђ market.rs             # Market struct (Vec<BetEntry> max 20)
+в”‚   в”‚   в”њв”Ђв”Ђ market_factory.rs     # MarketFactory PDA
+в”‚   в”‚   в””в”Ђв”Ђ user_position.rs      # UserPosition (unused in v1)
+в”‚   в””в”Ђв”Ђ instructions/
+в”‚       в”њв”Ђв”Ђ initialize_factory.rs
+в”‚       в”њв”Ђв”Ђ create_market.rs
+в”‚       в”њв”Ђв”Ђ delegate_market.rs    # CPI to Delegation Program
+в”‚       в”њв”Ђв”Ђ place_bet.rs          # Legacy ER bet path
+в”‚       в”њв”Ђв”Ђ resolve_market.rs     # Pyth Lazer + commit_and_undelegate
+в”‚       в””в”Ђв”Ђ claim_winnings.rs     # PMM payout + .retain() double-claim protection
+в”њв”Ђв”Ђ app/                          # React frontend
+в”‚   в””в”Ђв”Ђ src/
+в”‚       в”њв”Ђв”Ђ hooks/                # useMarkets, usePlaceBet, useResolveMarket, ...
+в”‚       в”њв”Ђв”Ђ components/           # MarketCard, AdminPanel, LivePriceWidget, ...
+в”‚       в””в”Ђв”Ђ constants.ts          # PROGRAM_ID, RPC endpoints
+в”њв”Ђв”Ђ tests/
+в”‚   в””в”Ђв”Ђ devnet-integration.ts    # Full lifecycle test
+в””в”Ђв”Ђ Anchor.toml
 ```
 
 ## Security Notes
@@ -155,3 +158,8 @@ oracle_bet/
 | MarketFactory PDA | Derived from `["factory"]` seed |
 | Pyth Lazer Storage | `3rdJbqfnagQ4yx9HXJViD4zc4xpiSqmFsKpPuSCQVyQL` |
 | Delegation Program | `DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh` |
+
+
+
+
+

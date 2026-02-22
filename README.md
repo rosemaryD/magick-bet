@@ -110,6 +110,10 @@ This keeps the demo resilient even when one upstream feed is unstable. In practi
 - Current private-bet claim settlement is demo-limited: payout claim for private positions is not exposed as a production onchain flow in this submission.
 - The top price badge is source-aware (Pyth preferred, Binance fallback, Simulated last resort).
 
+## Planned Next (Time-Limited)
+- Full private-bet settlement pipeline (`PlayerBet` -> vault accounting -> onchain claim) is designed but not completed within the hackathon timebox.
+- Production-grade ER runtime hardening (fee bootstrap edge cases, retries, richer monitoring) is planned as the next implementation step.
+
 ## Project Structure
 ```
 oracle_bet/

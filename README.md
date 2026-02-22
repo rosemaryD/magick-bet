@@ -7,9 +7,14 @@
 - **PlayerBet PDA** -> Delegated to TEE ER (Private User Bets)
 
 ## Overview
-OracleBet is a decentralized binary prediction market built on Solana devnet using MagicBlock Ephemeral Rollups (ER) for ultra-fast bet processing. Users predict whether SOL/USD price will be above or below a target at resolution time.
+MagickBet is a decentralized binary prediction market built on Solana devnet using MagicBlock Ephemeral Rollups (ER) for ultra-fast bet processing. Users predict whether SOL/USD price will be above or below a target at resolution time.
 
 **Live on Solana Devnet** | Program ID: `BFv69p4dBZtPvDcUUnVBhiCCgAFVq5gpEWspnfmKxRKY`
+
+**Technology profile (for judges):**
+- Not only Private ER: this submission uses a dual model.
+- Public market state runs on Solana L1 + standard ER delegation path.
+- Private user positions (`PlayerBet`) are delegated to TEE ER (PER path).
 
 ## Architecture
 
